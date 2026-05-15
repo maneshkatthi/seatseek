@@ -170,12 +170,60 @@ function TrackTrainTab() {
   const [trainNo, setTrainNo] = useState('');
   const [result, setResult] = useState(null);
   const [searched, setSearched] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState(null);
   const navigate = useNavigate();
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
+    if (!trainNo.trim()) return;
     setSearched(true);
-    const found = TRAINS.find((t) => t.trainNo === trainNo.trim());
-    setResult(found || null);
+    setLoading(true);
+    setResult(null);
+    setApiError(null);
+
+    try {
+      const apiKey = import.meta.env.VITE_RAPIDAPI_KEY || '6151738065msh51044cca57cc106p1e3817jsn790234601715';
+      const response = await fetch(`https://indian-railway-irctc.p.rapidapi.com/api/trains-search/v1/train/${trainNo.trim()}?isH5=true&client=web`, {
+        headers: {
+          'x-rapidapi-host': 'indian-railway-irctc.p.rapidapi.com',
+          'x-rapidapi-key': apiKey
+        }
+      });
+      const data = await response.json();
+      
+      if (data.body && data.body.length > 0 && data.body[0].trains.length > 0) {
+        const t = data.body[0].trains[0];
+        const start = t.schedule[0];
+        const end = t.schedule[t.schedule.length - 1];
+        
+        setResult({
+          trainNo: t.trainNumber,
+          name: t.trainName,
+          fromName: t.origin,
+          toName: t.destination,
+          from: t.stationFrom,
+          to: t.stationTo,
+          departure: start ? start.departureTime : '--',
+          arrival: end ? end.arrivalTime : '--',
+          duration: 'Live Schedule',
+          type: t.train_type && t.train_type[0] ? t.train_type[0] : 'Express',
+          platform: '-',
+          delay: 0,
+          lastStation: 'Live Tracking ->'
+        });
+      } else if (data.message && data.message.includes('exceeded')) {
+        setApiError("API Rate Limit Exceeded (429)");
+        throw new Error("Rate limit exceeded");
+      } else {
+        setResult(null);
+      }
+    } catch (err) {
+      console.error(err);
+      const found = TRAINS.find((t) => t.trainNo === trainNo.trim());
+      setResult(found || null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -200,10 +248,15 @@ function TrackTrainTab() {
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={handleSearch}
-            className="flex items-center gap-2 bg-blue-500 text-white text-sm font-semibold px-5 rounded-xl hover:bg-blue-400 transition-all"
+            disabled={loading}
+            className={`flex items-center gap-2 bg-blue-500 text-white text-sm font-semibold px-5 rounded-xl transition-all ${loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-400'}`}
           >
-            <Search className="w-4 h-4" />
-            Track
+            {loading ? (
+               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+               <Search className="w-4 h-4" />
+            )}
+            {loading ? 'Searching...' : 'Track'}
           </motion.button>
         </div>
         <p className="text-xs text-gray-600 mt-3">Try: 17406, 17202, 12951</p>
@@ -233,6 +286,13 @@ function TrackTrainTab() {
                     View Train Dashboard
                   </button>
                 </div>
+              </div>
+            ) : apiError ? (
+              <div className="glass-card p-5 text-center">
+                <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-3" />
+                <p className="text-white font-semibold">API Error</p>
+                <p className="text-red-400 text-sm mt-1">{apiError}</p>
+                <p className="text-gray-500 text-xs mt-2">You have exceeded your RapidAPI quota. Please upgrade your plan or wait until it resets.</p>
               </div>
             ) : (
               <div className="glass-card p-5 text-center">
@@ -274,7 +334,7 @@ export default function SearchPage() {
         t.to.toLowerCase().includes(to.toLowerCase());
       return fromMatch && toMatch;
     });
-    setResults(filtered.length > 0 ? filtered : TRAINS);
+    setResults(filtered);
   };
 
   return (

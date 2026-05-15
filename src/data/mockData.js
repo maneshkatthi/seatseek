@@ -17,6 +17,7 @@ export const STATIONS = [
   { code: 'BSP', name: 'Bilaspur' },
   { code: 'MAS', name: 'Chennai Central' },
   { code: 'SBC', name: 'Bengaluru City' },
+  { code: "OEA", name: "Odela" },
 ];
 
 export const TRAINS = [
@@ -34,6 +35,21 @@ export const TRAINS = [
     delay: 15,
     lastStation: 'Dornakal Junction',
     type: 'Express',
+  },
+  {
+    trainNo: '17033',
+    name: 'Singareni Passenger',
+    from: 'GLA',
+    fromName: 'Garla',
+    to: 'OEA',
+    toName: 'Odela',
+    departure: '09:15',
+    arrival: '13:30',
+    duration: '4h 15m',
+    platform: '1',
+    delay: 10,
+    lastStation: 'Garla',
+    type: 'Passenger',
   },
   {
     trainNo: '17202',
@@ -77,6 +93,14 @@ export const COACH_DATA = {
     { id: 'C6', name: 'S1', percentage: 76, label: 'High' },
     { id: 'C7', name: 'S2', percentage: 40, label: 'Low' },
   ],
+  '17033': [
+    { id: 'C1', name: 'S1', percentage: 20, label: 'Low' },
+    { id: 'C2', name: 'S2', percentage: 45, label: 'Moderate' },
+    { id: 'C3', name: 'S3', percentage: 80, label: 'High' },
+    { id: 'C4', name: 'S4', percentage: 110, label: 'Very High' },
+    { id: 'C5', name: 'S5', percentage: 60, label: 'Moderate' },
+    { id: 'C6', name: 'S6', percentage: 25, label: 'Low' },
+  ],
   '17202': [
     { id: 'C1', name: '1A', percentage: 45, label: 'Moderate' },
     { id: 'C2', name: '2A', percentage: 58, label: 'Moderate' },
@@ -110,6 +134,20 @@ export const TRACK_DATA = {
       { station: 'Bona Kalu', code: 'BNK', scheduledArr: '06:55', actualArr: '07:05', scheduledDep: '06:57', actualDep: '07:07', distance: 42, platform: '1', status: 'departed' },
       { station: 'Dornakal Junction', code: 'DKAE', scheduledArr: '07:38', actualArr: '07:53', scheduledDep: '07:40', actualDep: null, distance: 87, platform: '3', status: 'current' },
       { station: 'Khammam', code: 'KMT', scheduledArr: '09:45', actualArr: null, scheduledDep: null, actualDep: null, distance: 135, platform: '2', status: 'upcoming' },
+    ],
+  },
+  '17033': {
+    trainNo: '17033',
+    name: 'Singareni Passenger',
+    from: 'GLA',
+    to: 'OEA',
+    currentStation: 'Garla',
+    delay: 10,
+    stops: [
+      { station: 'Garla', code: 'GLA', scheduledArr: null, actualArr: null, scheduledDep: '09:15', actualDep: '09:25', distance: 0, platform: '1', status: 'departed' },
+      { station: 'Dornakal Junction', code: 'DKAE', scheduledArr: '09:40', actualArr: null, scheduledDep: '09:45', actualDep: null, distance: 87, platform: '3', status: 'upcoming' },
+      { station: 'Warangal', code: 'WL', scheduledArr: '11:00', actualArr: null, scheduledDep: '11:05', actualDep: null, distance: 120, platform: '2', status: 'upcoming' },
+      { station: 'Odela', code: 'OEA', scheduledArr: '13:30', actualArr: null, scheduledDep: null, actualDep: null, distance: 150, platform: '2', status: 'upcoming' },
     ],
   },
   '17202': {

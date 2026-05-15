@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -20,9 +20,115 @@ export default function TrainDashboardPage() {
   const navigate = useNavigate();
   const [expandedCoach, setExpandedCoach] = useState(null);
 
-  const train = TRAINS.find(t => t.trainNo === trainNo) || TRAINS[0];
+  const train = TRAINS.find(t => t.trainNo === trainNo) || { trainNo: trainNo, name: 'Live Train Data', from: 'Origin', to: 'Destination', delay: 0 };
   const coaches = COACH_DATA[trainNo] || COACH_DATA['17406'];
-  const trackInfo = TRACK_DATA[trainNo] || TRACK_DATA['17406'];
+  const fallbackTrackInfo = TRACK_DATA[trainNo] || { stops: [] };
+
+  const [liveTrackInfo, setLiveTrackInfo] = useState(null);
+  const [loadingTrack, setLoadingTrack] = useState(true);
+  const [dateOffset, setDateOffset] = useState(0);
+  const isAutoFetching = useRef(true);
+
+  // Reset auto-fetching when train changes
+  useEffect(() => {
+    isAutoFetching.current = true;
+    setDateOffset(0);
+  }, [trainNo]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchLiveStatus = async (offsetToTry) => {
+      try {
+        setLoadingTrack(true);
+        setLiveTrackInfo(null); // Clear previous errors
+        
+        const targetDate = new Date();
+        targetDate.setDate(targetDate.getDate() + offsetToTry);
+        const yyyy = targetDate.getFullYear();
+        const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
+        const dd = String(targetDate.getDate()).padStart(2, '0');
+        const dateStr = `${yyyy}${mm}${dd}`;
+
+        const apiKey = import.meta.env.VITE_RAPIDAPI_KEY || '6151738065msh51044cca57cc106p1e3817jsn790234601715';
+
+        const response = await fetch(`https://indian-railway-irctc.p.rapidapi.com/api/trains/v1/train/status?departure_date=${dateStr}&isH5=true&client=web&deviceIdentifier=seatseek&train_number=${trainNo}`, {
+          method: 'GET',
+          headers: {
+            'x-rapidapi-host': 'indian-railway-irctc.p.rapidapi.com',
+            'x-rapidapi-key': apiKey
+          }
+        });
+        
+        const data = await response.json();
+        if (!isMounted) return;
+
+        const hasError = data.error || data.status?.result === 'failure' || data.message;
+
+        // Auto-discovery logic: If error on today, try yesterday, then day before.
+        if (hasError && isAutoFetching.current && offsetToTry > -2) {
+          setDateOffset(offsetToTry - 1);
+          return; // The useEffect will re-run with the new dateOffset
+        }
+        
+        if (data.body && data.body.stations) {
+          let pastCurrent = false;
+          const formattedStops = data.body.stations.map(stn => {
+            let status = 'upcoming';
+            if (stn.stationCode === data.body.current_station) {
+              status = 'current';
+              pastCurrent = true;
+            } else if (!pastCurrent) {
+              status = 'departed';
+            }
+            
+            return {
+              station: stn.stationName,
+              code: stn.stationCode,
+              scheduledArr: stn.arrivalTime !== '00:00' ? stn.arrivalTime : null,
+              actualArr: stn.actual_arrival_time,
+              scheduledDep: stn.departureTime !== '00:00' ? stn.departureTime : null,
+              actualDep: stn.actual_departure_time,
+              platform: stn.expected_platform || '-',
+              status: status
+            };
+          });
+
+          setLiveTrackInfo({
+            currentStation: data.body.current_station,
+            trainMsg: data.body.train_status_message,
+            stops: formattedStops
+          });
+        } else if (hasError) {
+          setLiveTrackInfo({
+            error: data.message || data.error || data.status?.message?.message || "Train not running today.",
+            stops: []
+          });
+        }
+      } catch (error) {
+        if (!isMounted) return;
+        console.error("Failed to fetch live train data", error);
+        setLiveTrackInfo({ error: "Failed to connect to API", stops: [] });
+      } finally {
+        if (isMounted && (!isAutoFetching.current || offsetToTry === -2 || liveTrackInfo !== null)) {
+          setLoadingTrack(false);
+        }
+      }
+    };
+
+    fetchLiveStatus(dateOffset);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [trainNo, dateOffset]);
+
+  const handleDateChange = (offset) => {
+    isAutoFetching.current = false;
+    setDateOffset(offset);
+  };
+
+  const displayTrackInfo = liveTrackInfo || fallbackTrackInfo;
 
   // Quick Stats
   const leastCrowded = useMemo(() => coaches.reduce((min, c) => c.percentage < min.percentage ? c : min, coaches[0]), [coaches]);
@@ -254,11 +360,60 @@ export default function TrainDashboardPage() {
 
         {/* Section 5: Live Train Location */}
         <div className="glass-card p-6">
-          <h2 className="text-lg font-bold text-white mb-6">Live Status Timeline</h2>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+            <div>
+              <h2 className="text-lg font-bold text-white mb-2">Live Status Timeline</h2>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500 uppercase font-semibold mr-1">Origin Date:</span>
+                <button onClick={() => handleDateChange(-2)} className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${dateOffset === -2 ? 'bg-blue-500 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>Day -2</button>
+                <button onClick={() => handleDateChange(-1)} className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${dateOffset === -1 ? 'bg-blue-500 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>Yesterday</button>
+                <button onClick={() => handleDateChange(0)} className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-all ${dateOffset === 0 ? 'bg-blue-500 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>Today</button>
+              </div>
+            </div>
+            <div className="flex-shrink-0">
+              {loadingTrack ? (
+                <span className="text-xs text-blue-400 flex items-center gap-1.5 font-medium"><RefreshCw className="w-3.5 h-3.5 animate-spin"/> Fetching IRCTC API...</span>
+              ) : liveTrackInfo && !liveTrackInfo.error ? (
+                <span className="text-xs text-green-400 flex items-center gap-1.5 font-medium"><span className="w-2 h-2 bg-green-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.8)]"/> Live IRCTC Data</span>
+              ) : liveTrackInfo?.error ? (
+                <span className="text-xs text-red-400 flex items-center gap-1.5 font-medium"><AlertCircle className="w-3.5 h-3.5"/> API Error</span>
+              ) : (
+                <span className="text-xs text-amber-400 flex items-center gap-1.5 font-medium"><AlertCircle className="w-3.5 h-3.5"/> Offline Prediction Mode</span>
+              )}
+            </div>
+          </div>
+          
+          {displayTrackInfo.trainMsg && !displayTrackInfo.error && (
+            <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl shadow-inner">
+              <div className="flex items-start gap-3">
+                <Info className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-blue-200 leading-relaxed font-medium" dangerouslySetInnerHTML={{ __html: displayTrackInfo.trainMsg }}></p>
+              </div>
+            </div>
+          )}
+
+          {displayTrackInfo.error && (
+             <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl shadow-inner">
+               <div className="flex items-start gap-3">
+                 <AlertCircle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+                 <div>
+                   <p className="text-sm text-red-200 font-bold mb-1">Live Tracking Unavailable</p>
+                   <p className="text-xs text-red-300 leading-relaxed font-medium">{displayTrackInfo.error}</p>
+                 </div>
+               </div>
+             </div>
+          )}
+
           <div className="relative pl-6 space-y-8">
             <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-white/10" />
             
-            {trackInfo.stops.map((stop, i) => {
+            {displayTrackInfo.stops && displayTrackInfo.stops.length === 0 && !loadingTrack && (
+              <div className="py-8 text-center text-gray-500 text-sm">
+                No timeline data available.
+              </div>
+            )}
+
+            {displayTrackInfo.stops && displayTrackInfo.stops.map((stop, i) => {
               const isPast = stop.status === 'departed';
               const isCurrent = stop.status === 'current';
               const isUpcoming = stop.status === 'upcoming';

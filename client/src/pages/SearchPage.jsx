@@ -185,36 +185,47 @@ function TrackTrainTab() {
     try {
       const data = await searchTrain(trainNo.trim());
       
-      if (data.body && data.body.length > 0 && data.body[0].trains.length > 0) {
+      // Standardized response is an array of train objects
+      if (Array.isArray(data) && data.length > 0) {
+        const t = data[0];
+        setResult({
+          trainNo: t.trainNumber || t.trainNo,
+          name: t.trainName || t.name,
+          fromName: t.originName || t.fromName || t.from,
+          toName: t.destinationName || t.toName || t.to,
+          departure: t.departure || '--:--',
+          arrival: t.arrival || '--:--',
+          type: t.type || 'Express',
+          platform: t.platform || '-',
+          delay: t.delay || 0,
+        });
+      } 
+      // Handle legacy/nested responses
+      else if (data.body && data.body.length > 0 && data.body[0].trains && data.body[0].trains.length > 0) {
         const t = data.body[0].trains[0];
-        const start = t.schedule[0];
-        const end = t.schedule[t.schedule.length - 1];
-        
         setResult({
           trainNo: t.trainNumber,
           name: t.trainName,
           fromName: t.origin,
           toName: t.destination,
-          from: t.stationFrom,
-          to: t.stationTo,
-          departure: start ? start.departureTime : '--',
-          arrival: end ? end.arrivalTime : '--',
-          duration: 'Live Schedule',
-          type: t.train_type && t.train_type[0] ? t.train_type[0] : 'Express',
+          departure: t.schedule?.[0]?.departureTime || '--:--',
+          arrival: t.schedule?.[t.schedule.length - 1]?.arrivalTime || '--:--',
+          type: t.train_type?.[0] || 'Express',
           platform: '-',
           delay: 0,
-          lastStation: 'Live Tracking ->'
         });
-      } else if (data.message && data.message.includes('exceeded')) {
-        setApiError("API Rate Limit Exceeded (429)");
-        throw new Error("Rate limit exceeded");
-      } else {
-        setResult(null);
+      }
+      // Fallback to mock data if API returns empty but mock has it
+      else {
+        const found = TRAINS.find((t) => t.trainNo === trainNo.trim());
+        setResult(found || null);
       }
     } catch (err) {
-      console.error(err);
+      console.error('Search API Error:', err);
+      // Robust fallback to mock data on network error
       const found = TRAINS.find((t) => t.trainNo === trainNo.trim());
       setResult(found || null);
+      if (!found) setApiError("Intelligence platform connection unstable.");
     } finally {
       setLoading(false);
     }

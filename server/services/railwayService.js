@@ -25,6 +25,10 @@ const getTrainInfo = async (trainNo) => {
     
     const trainDetails = mainSection.substring(startIndex + 1).split('~');
     
+    // Extract trainId using regex from the whole rawData for better reliability
+    const trainIdMatch = rawData.match(/~MAIL_EXPRESS~([0-9]+)~/i) || rawData.match(/~([0-9]{4,10})~/);
+    const trainId = trainIdMatch ? trainIdMatch[1] : null;
+
     return {
       trainNumber: trainDetails[0],
       trainName: trainDetails[1],
@@ -35,6 +39,7 @@ const getTrainInfo = async (trainNo) => {
       departure: trainDetails[10],
       arrival: trainDetails[11],
       duration: trainDetails[12],
+      trainId: trainId,
     };
   } catch (error) {
     console.error('Scraper Error (Train Info):', error.message);
@@ -47,8 +52,12 @@ const getTrainInfo = async (trainNo) => {
  */
 const getTrainRouteData = async (trainNo) => {
   try {
-    // Correct URL for route: Action=TRAINROUTE
-    const response = await axios.get(`https://erail.in/data.aspx?Action=TRAINROUTE&Password=2012&Data1=${trainNo}&Data2=0&Cache=true`, {
+    // First get the internal trainId
+    const info = await getTrainInfo(trainNo);
+    if (!info || !info.trainId) return [];
+
+    // Correct URL for route: Action=TRAINROUTE using internal ID
+    const response = await axios.get(`https://erail.in/data.aspx?Action=TRAINROUTE&Password=2012&Data1=${info.trainId}&Data2=0&Cache=true`, {
       headers: { 'User-Agent': getUserAgent() }
     });
 
@@ -58,17 +67,24 @@ const getTrainRouteData = async (trainNo) => {
     // Format: STATION_CODE~STATION_NAME~ARR_TIME~DEP_TIME~DISTANCE~DAY~^...
     const stationsRaw = rawData.split('~^');
     return stationsRaw.map(s => {
+      // Remove the leading ^ from the first element if present
+      if (s.startsWith('^')) s = s.substring(1);
+      
       const d = s.split('~');
       if (d.length < 6) return null;
+      
+      // The array format from erail is slightly shifted due to the starting index
+      // e.g. [ '1', 'NS', 'Narasapur', 'First', '17.20', '0', '0' ]
+      // So index 1 is Station Code, 2 is Station Name, etc.
       return {
-        stationCode: d[0],
-        stationName: d[1],
-        arrivalTime: d[2] === '00:00' ? null : d[2],
-        departureTime: d[3] === '00:00' ? null : d[3],
-        distance: d[4],
-        day: d[5]
+        stationCode: d[1],
+        stationName: d[2],
+        arrivalTime: d[3] === 'First' ? null : d[3],
+        departureTime: d[4] === 'Last' ? null : d[4],
+        distance: d[5],
+        day: d[7] || '1'
       };
-    }).filter(s => s !== null);
+    }).filter(s => s !== null && s.stationCode);
   } catch (error) {
     console.error('Scraper Error (Route):', error.message);
     return [];

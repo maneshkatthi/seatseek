@@ -6,11 +6,10 @@ const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
-export const getLiveStatus = async (trainNo, departureDate) => {
+export const getLiveStatus = async (trainNo, date) => {
   try {
-    const response = await api.get(`/live/${trainNo}`, {
-      params: { departure_date: departureDate },
-    });
+    const url = date ? `/live/${trainNo}/${date}` : `/live/${trainNo}`;
+    const response = await api.get(url);
     return response.data;
   } catch (error) {
     console.error('API Error (Live Status):', error);
@@ -34,6 +33,16 @@ export const getTrainRoute = async (trainNo) => {
     return response.data;
   } catch (error) {
     console.error('API Error (Route):', error);
+    throw error;
+  }
+};
+
+export const getCoachDensity = async (trainNo) => {
+  try {
+    const response = await api.get(`/density/${trainNo}`);
+    return response.data;
+  } catch (error) {
+    console.error('API Error (Density):', error);
     throw error;
   }
 };

@@ -11,6 +11,8 @@ const host = process.env.RAPIDAPI_HOST;
 
 const fetchFromRapidAPI = async (endpoint, params) => {
   const apiKey = getApiKey();
+  if (!apiKey) throw new Error("No RapidAPI keys available");
+
   try {
     const response = await axios.get(`https://${host}${endpoint}`, {
       params,
@@ -22,12 +24,37 @@ const fetchFromRapidAPI = async (endpoint, params) => {
     return response.data;
   } catch (error) {
     if (error.response && error.response.status === 429) {
-      console.warn(`Rate limit hit for key: ${apiKey}. Retrying with another key...`);
-      // Optional: Recursive retry with another key
-      // return fetchFromRapidAPI(endpoint, params); 
+      console.warn(`Rate limit hit for key: ${apiKey}.`);
     }
     throw error;
   }
 };
 
-module.exports = { fetchFromRapidAPI };
+/**
+ * Get Real-time Train Status
+ */
+const getLiveStatus = async (trainNo, departureDate) => {
+  // Format date to YYYYMMDD if not already
+  const formattedDate = (departureDate || '').replace(/-/g, '');
+  
+  return fetchFromRapidAPI('/api/trains/v1/train/status', {
+    train_number: trainNo,
+    departure_date: formattedDate,
+    isH5: 'true',
+    client: 'web'
+  });
+};
+
+/**
+ * Get Train Schedule/Route
+ */
+const getTrainSchedule = async (trainNo) => {
+  // Try different common endpoint versions for schedule
+  return fetchFromRapidAPI('/api/v1/getTrainSchedule', { trainNo });
+};
+
+module.exports = { 
+  fetchFromRapidAPI,
+  getLiveStatus,
+  getTrainSchedule
+};

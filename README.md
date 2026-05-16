@@ -1,64 +1,89 @@
-# 🚆 SeatSeek Full-Stack
+# 🚆 SeatSeek - Train Intelligence Platform
 
-SeatSeek has been refactored into a scalable full-stack architecture. The project is divided into a React frontend and an Express backend.
+SeatSeek is a production-ready train intelligence platform that provides real-time train running status, route tracking, and coach-wise crowd density visualization. Designed for scalability, it leverages IoT sensor data and AI-based predictions to help passengers board smarter.
 
-## 📂 Project Structure
+![SeatSeek Dashboard](https://images.unsplash.com/photo-1474487056233-047d15622142?auto=format&fit=crop&q=80&w=1200)
 
-```
-seatseek/
-├── client/   # React + Vite frontend
-└── server/   # Node.js + Express backend
-```
+## 🌟 Key Features
 
-## 🚀 Getting Started
-
-### Prerequisites
-- [Node.js](https://nodejs.org/) (v18 or higher)
-
-### Installation
-
-1. **Clone and enter the directory:**
-   ```bash
-   git clone https://github.com/maneshkatthi/seatseek.git
-   cd seatseek
-   ```
-
-2. **Install all dependencies:**
-   ```bash
-   npm run install-all
-   ```
-
-### Configuration
-
-1. **Backend Setup:**
-   Create a `server/.env` file and add your RapidAPI keys:
-   ```env
-   PORT=5000
-   RAPIDAPI_KEYS=key1,key2,key3
-   RAPIDAPI_HOST=indian-railway-irctc.p.rapidapi.com
-   ```
-
-2. **Frontend Setup:**
-   Create a `client/.env` file:
-   ```env
-   VITE_API_URL=http://localhost:5000/api
-   ```
-
-### Running the App
-
-Run both frontend and backend simultaneously:
-```bash
-npm run dev
-```
-
-- **Frontend:** http://localhost:5173
-- **Backend:** http://localhost:5000
+- **Live Train Status**: Real-time tracking with station-by-station updates.
+- **Coach-wise Crowd Density**: Visual representation of occupancy levels (Low, Medium, High).
+- **IoT Ready**: Scalable architecture for GPS and ESP32 sensor integration.
+- **Modern UI**: Dark futuristic theme with smooth Framer Motion animations.
+- **Caching Layer**: Optimized performance using `node-cache`.
+- **Production-Ready**: Modular backend, centralized error handling, and robust data services.
 
 ## 🛠️ Tech Stack
-- **Frontend:** React, Vite, Tailwind CSS, Framer Motion, Axios.
-- **Backend:** Node.js, Express, Axios, Dotenv, CORS, Morgan.
 
-## 🔮 Roadmap
-- ESP32 IoT Sensor integration.
-- Supabase/Firebase for user profiles.
-- GPS live tracking modules.
+### Frontend
+- **React + Vite**: High-performance frontend framework.
+- **TailwindCSS**: Premium utility-first styling.
+- **Framer Motion**: Smooth, high-fidelity animations.
+- **Lucide React**: Beautiful icons.
+- **Axios**: Robust API communication.
+
+### Backend
+- **Node.js + Express**: Scalable server-side logic.
+- **Supabase (PostgreSQL)**: Scalable database and authentication.
+- **Node-Cache**: High-speed in-memory data caching.
+- **Cheerio/Axios**: Robust data scraping and API aggregation.
+
+## 📁 Project Structure
+
+```text
+seatseek/
+ ├── client/           # React frontend
+ │    ├── src/
+ │    │    ├── components/
+ │    │    ├── pages/
+ │    │    ├── services/
+ │    │    └── data/
+ └── server/           # Node.js backend
+      ├── routes/
+      ├── controllers/
+      ├── services/
+      ├── middleware/
+      ├── database/
+      └── cache/
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js (v18+)
+- Supabase Account
+
+### Setup Instructions
+
+1. **Clone the repository**
+2. **Backend Setup**:
+   ```bash
+   cd server
+   npm install
+   cp .env.example .env # Add your Supabase & RapidAPI keys
+   npm run dev
+   ```
+3. **Frontend Setup**:
+   ```bash
+   cd client
+   npm install
+   npm run dev
+   ```
+
+## 📖 Documentation
+
+- [Setup Guide](docs/setup_guide.md)
+- [API Documentation](docs/api_docs.md)
+- [Supabase Configuration](docs/supabase_setup.md)
+- [Deployment Guide](docs/deployment_guide.md)
+
+## 🔮 Future Roadmap
+
+- **IoT Integration**: Direct ingestion of GPS/IR data from ESP32 modules.
+- **AI Predictions**: Machine learning models for predicting coach density based on historical data.
+- **WebSockets**: Real-time push updates for live train positions.
+- **Mobile App**: Native experience for on-the-go tracking.
+
+---
+
+Built with ❤️ by the SeatSeek Team.

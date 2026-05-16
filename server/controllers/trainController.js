@@ -1,4 +1,5 @@
 const { fetchFromRapidAPI } = require('../services/apiService');
+const { getTrainInfo, getTrainRouteData } = require('../services/railwayService');
 
 // Mock data fallback
 const MOCK_DATA = {
@@ -32,8 +33,13 @@ const getLiveStatus = async (req, res, next) => {
 const getTrainRoute = async (req, res, next) => {
   const { trainNo } = req.params;
   try {
-    // This is often a different endpoint or part of the same status
-    // For now, let's assume it's status or implement if needed
+    // Try scraper first (no quota)
+    const route = await getTrainRouteData(trainNo);
+    if (route && route.length > 0) {
+      return res.json({ body: { stations: route } });
+    }
+
+    // Fallback to RapidAPI
     const data = await fetchFromRapidAPI('/api/trains/v1/train/status', {
       train_number: trainNo,
       client: 'web',
@@ -47,6 +53,23 @@ const getTrainRoute = async (req, res, next) => {
 const searchTrain = async (req, res, next) => {
   const { trainNo } = req.params;
   try {
+    // Try scraper first
+    const info = await getTrainInfo(trainNo);
+    if (info) {
+      return res.json({
+        body: [{
+          trains: [{
+            trainNumber: info.trainNumber,
+            trainName: info.trainName,
+            origin: info.origin,
+            destination: info.destination,
+            schedule: [] // Scraper doesn't provide schedule here
+          }]
+        }]
+      });
+    }
+
+    // Fallback to RapidAPI
     const data = await fetchFromRapidAPI(`/api/trains-search/v1/train/${trainNo}`, {
       isH5: 'true',
       client: 'web',

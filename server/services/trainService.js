@@ -1,4 +1,5 @@
 const railwayService = require('./railwayService');
+const betweenStationsService = require('./betweenStationsService');
 const apiService = require('./apiService');
 const cache = require('../cache/nodeCache');
 const supabase = require('../database/supabase');
@@ -172,15 +173,17 @@ const searchTrain = async (trainNo) => {
  * Trains Between Stations
  */
 const getTrainsBetween = async (from, to) => {
-  const cacheKey = `btw_${from}_${to}`;
+  const fromCode = String(from).trim().toUpperCase();
+  const toCode = String(to).trim().toUpperCase();
+  const cacheKey = `btw_${fromCode}_${toCode}`;
   const cachedData = cache.get(cacheKey);
   if (cachedData) return cachedData;
 
-  const trains = await railwayService.getTrainsBtwStations(from, to);
-  if (trains && trains.length > 0) {
-    cache.set(cacheKey, trains, 3600); // Cache for 1 hour
+  const result = await betweenStationsService.getTrainsBetweenStations(fromCode, toCode);
+  if (result?.trains?.length > 0) {
+    cache.set(cacheKey, result, 3600);
   }
-  return trains;
+  return result;
 };
 
 /**

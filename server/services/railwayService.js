@@ -96,35 +96,42 @@ const getTrainRouteData = async (trainNo) => {
  */
 const getTrainsBtwStations = async (from, to) => {
   try {
-    const response = await axios.get(`https://erail.in/rail/getTrains.aspx?From=${from}&To=${to}`, {
-      headers: { 'User-Agent': getUserAgent() }
-    });
+    const fromCode = String(from).trim().toUpperCase();
+    const toCode = String(to).trim().toUpperCase();
+    const response = await axios.get(
+      `https://erail.in/rail/getTrains.aspx?Station_From=${fromCode}&Station_To=${toCode}&DataSource=0&Language=0&Cache=true`,
+      {
+        headers: {
+          'User-Agent': getUserAgent(),
+          Referer: `https://erail.in/trains-between-stations.aspx?From=${fromCode}&To=${toCode}`,
+        },
+        timeout: 15000,
+      }
+    );
 
     const rawData = response.data;
-    if (!rawData) return [];
+    if (!rawData || /please try again/i.test(String(rawData))) return [];
 
-    const sections = rawData.split('~~~~~~~~');
-    const mainSection = sections[0];
-    
-    // Split by ^ to get individual trains
-    const trainsRaw = mainSection.split('^').slice(1);
-    
-    return trainsRaw.map(t => {
-      const d = t.split('~');
-      if (d.length < 13) return null;
-      return {
-        trainNo: d[0],
-        name: d[1],
-        from: d[2],
-        fromCode: d[3],
-        to: d[4],
-        toCode: d[5],
-        departure: d[10],
-        arrival: d[11],
-        duration: d[12],
-        days: d[13]
-      };
-    }).filter(t => t !== null);
+    const trainsRaw = String(rawData).split('^').slice(1);
+
+    return trainsRaw
+      .map((t) => {
+        const d = t.split('~');
+        if (d.length < 13) return null;
+        return {
+          trainNo: d[0],
+          name: d[1],
+          from: d[2],
+          fromCode: d[3],
+          to: d[4],
+          toCode: d[5],
+          departure: d[10],
+          arrival: d[11],
+          duration: d[12],
+          days: d[13],
+        };
+      })
+      .filter((t) => t !== null);
   } catch (error) {
     console.error('Scraper Error (Between Stations):', error.message);
     return [];

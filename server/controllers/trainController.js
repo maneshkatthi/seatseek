@@ -48,8 +48,17 @@ const getBetweenStations = async (req, res, next) => {
     if (from.toUpperCase() === to.toUpperCase()) {
       return res.status(400).json({ success: false, message: "Source and destination cannot be same" });
     }
-    const trains = await trainService.getTrainsBetween(from, to);
-    res.json(trains);
+    const codePattern = /^[A-Z0-9]{2,5}$/;
+    const fromCode = from.trim().toUpperCase();
+    const toCode = to.trim().toUpperCase();
+    if (!codePattern.test(fromCode) || !codePattern.test(toCode)) {
+      return res.status(400).json({
+        success: false,
+        message: "Use valid IR station codes (2–5 letters), e.g. SC, BZA, GLA, KMT",
+      });
+    }
+    const result = await trainService.getTrainsBetween(fromCode, toCode);
+    res.json(result);
   } catch (error) {
     next(error);
   }

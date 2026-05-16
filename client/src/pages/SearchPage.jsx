@@ -7,10 +7,35 @@ import {
   BarChart2, RadioTower
 } from 'lucide-react';
 import { STATIONS, TRAINS } from '../data/mockData';
-import { searchTrain } from '../services/api';
+import { searchTrain, getTrainsBetween } from '../services/api';
+
+const resolveStationCode = (input) => {
+  if (!input?.trim()) return '';
+  const trimmed = input.trim();
+
+  const parenCode = trimmed.match(/\(([A-Za-z0-9]{2,5})\)\s*$/);
+  if (parenCode) return parenCode[1].toUpperCase();
+
+  const q = trimmed.toLowerCase();
+  const exactCode = STATIONS.find((s) => s.code.toLowerCase() === q);
+  if (exactCode) return exactCode.code;
+
+  const exactName = STATIONS.find((s) => s.name.toLowerCase() === q);
+  if (exactName) return exactName.code;
+
+  const partial = STATIONS.find(
+    (s) => s.name.toLowerCase().includes(q) || s.code.toLowerCase() === q
+  );
+  if (partial) return partial.code;
+
+  const asCode = trimmed.toUpperCase();
+  if (/^[A-Z0-9]{2,5}$/.test(asCode)) return asCode;
+
+  return '';
+};
 
 // --- Station Autocomplete Input ---
-function StationInput({ label, value, onChange, placeholder, icon: Icon }) {
+function StationInput({ label, value, onChange, onSelectStation, placeholder, icon: Icon }) {
   const [focused, setFocused] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const wrapRef = useRef(null);
@@ -60,11 +85,12 @@ function StationInput({ label, value, onChange, placeholder, icon: Icon }) {
           >
             {suggestions.map((s) => (
               <button
-                key={s.code}
+                key={`${s.code}-${s.name}`}
                 className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/8 transition-all text-left border-b border-white/5 last:border-0"
                 onMouseDown={(e) => {
                   e.preventDefault();
                   onChange(s.name);
+                  onSelectStation?.(s);
                   setFocused(false);
                   setSuggestions([]);
                 }}
@@ -82,7 +108,7 @@ function StationInput({ label, value, onChange, placeholder, icon: Icon }) {
 }
 
 // --- Train Result Card ---
-function TrainCard({ train, index }) {
+function TrainCard({ train, index, compact = false }) {
   const navigate = useNavigate();
 
   return (
@@ -125,7 +151,7 @@ function TrainCard({ train, index }) {
             </div>
           </div>
 
-          {/* Status row */}
+          {!compact && (
           <div className="flex flex-wrap items-center gap-3 mt-3 text-xs">
             <div className="flex items-center gap-1.5 text-gray-500">
               <Navigation className="w-3 h-3" />
@@ -147,6 +173,7 @@ function TrainCard({ train, index }) {
               </div>
             )}
           </div>
+          )}
         </div>
 
         {/* Actions */}
@@ -318,28 +345,103 @@ export default function SearchPage() {
   const [activeTab, setActiveTab] = useState('find');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
+  const [fromCode, setFromCode] = useState('');
+  const [toCode, setToCode] = useState('');
   const [results, setResults] = useState([]);
   const [searched, setSearched] = useState(false);
+  const [findLoading, setFindLoading] = useState(false);
+  const [findError, setFindError] = useState(null);
+  const [findMessage, setFindMessage] = useState(null);
+  const [routeLabel, setRouteLabel] = useState({ from: '', to: '' });
 
   const handleSwap = () => {
     setFrom(to);
     setTo(from);
+    setFromCode(toCode);
+    setToCode(fromCode);
   };
 
-  const handleSearch = () => {
+  const handleFromChange = (value) => {
+    setFrom(value);
+    setFromCode('');
+  };
+
+  const handleToChange = (value) => {
+    setTo(value);
+    setToCode('');
+  };
+
+  const mapApiTrainToCard = (train) => ({
+    trainNo: train.trainNumber,
+    name: train.trainName,
+    fromName: train.fromStation,
+    toName: train.toStation,
+    departure: train.departureTime,
+    arrival: train.arrivalTime,
+    duration: train.duration,
+    type: train.type || 'Express',
+  });
+
+  const handleSearch = async () => {
+    if (!from.trim() || !to.trim()) {
+      setFindError('Please enter both origin and destination stations.');
+      setSearched(true);
+      setResults([]);
+      return;
+    }
+
+    const originCode = fromCode || resolveStationCode(from);
+    const destCode = toCode || resolveStationCode(to);
+
+    if (!originCode || !destCode) {
+      setFindError(
+        'Could not resolve station codes. Pick a station from the list or enter codes like SC, BZA, GLA, KMT.'
+      );
+      setSearched(true);
+      setResults([]);
+      return;
+    }
+
+    if (originCode === destCode) {
+      setFindError('Origin and destination must be different stations.');
+      setSearched(true);
+      setResults([]);
+      return;
+    }
+
     setSearched(true);
-    const filtered = TRAINS.filter((t) => {
-      const fromMatch =
-        !from ||
-        t.fromName.toLowerCase().includes(from.toLowerCase()) ||
-        t.from.toLowerCase().includes(from.toLowerCase());
-      const toMatch =
-        !to ||
-        t.toName.toLowerCase().includes(to.toLowerCase()) ||
-        t.to.toLowerCase().includes(to.toLowerCase());
-      return fromMatch && toMatch;
-    });
-    setResults(filtered);
+    setFindLoading(true);
+    setFindError(null);
+    setFindMessage(null);
+    setResults([]);
+    setRouteLabel({ from: originCode, to: destCode });
+
+    try {
+      const data = await getTrainsBetween(originCode, destCode);
+      const trains = Array.isArray(data?.trains)
+        ? data.trains
+        : Array.isArray(data)
+          ? data
+          : [];
+      setResults(trains.map(mapApiTrainToCard));
+      if (trains.length === 0) {
+        setFindMessage(data?.message || 'No trains found for this route.');
+      }
+    } catch (err) {
+      console.error('Between stations search failed:', err);
+      const isNetwork =
+        err.code === 'ERR_NETWORK' ||
+        err.message?.includes('Network Error') ||
+        !err.response;
+      setFindError(
+        isNetwork
+          ? 'Cannot reach the server. Make sure the backend is running on port 5000.'
+          : 'Could not load trains right now. Please try again.'
+      );
+      setResults([]);
+    } finally {
+      setFindLoading(false);
+    }
   };
 
   return (
@@ -394,12 +496,16 @@ export default function SearchPage() {
               className="space-y-6"
             >
               {/* Search form */}
-              <div className="glass-card p-6 space-y-4">
+              <div
+                className="glass-card p-6 space-y-4"
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              >
                 <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
                   <StationInput
                     label="From"
                     value={from}
-                    onChange={setFrom}
+                    onChange={handleFromChange}
+                    onSelectStation={(s) => setFromCode(s.code)}
                     placeholder="Origin station..."
                     icon={MapPin}
                   />
@@ -418,7 +524,8 @@ export default function SearchPage() {
                   <StationInput
                     label="To"
                     value={to}
-                    onChange={setTo}
+                    onChange={handleToChange}
+                    onSelectStation={(s) => setToCode(s.code)}
                     placeholder="Destination station..."
                     icon={MapPin}
                   />
@@ -428,33 +535,59 @@ export default function SearchPage() {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={handleSearch}
-                  className="w-full flex items-center justify-center gap-2.5 bg-blue-500 text-white font-semibold py-3.5 rounded-xl hover:bg-blue-400 transition-all hover:shadow-xl hover:shadow-blue-500/30"
+                  disabled={findLoading}
+                  className={`w-full flex items-center justify-center gap-2.5 bg-blue-500 text-white font-semibold py-3.5 rounded-xl transition-all hover:shadow-xl hover:shadow-blue-500/30 ${findLoading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-400'}`}
                 >
-                  <Search className="w-4 h-4" />
-                  Search Trains
+                  {findLoading ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Search className="w-4 h-4" />
+                  )}
+                  {findLoading ? 'Searching...' : 'Search Trains'}
                 </motion.button>
+                <p className="text-xs text-gray-600">Use station codes (e.g. SC, BZA) or pick from suggestions</p>
               </div>
 
-              {/* Results */}
               <AnimatePresence>
-                {searched && (
+                {searched && !findLoading && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="space-y-4"
                   >
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-gray-400">
-                        <span className="text-white font-semibold">{results.length}</span> trains found
-                      </p>
-                      <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                        <Zap className="w-3 h-3 text-blue-400" />
-                        Live data
+                    {findError ? (
+                      <div className="glass-card p-5 text-center">
+                        <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-3" />
+                        <p className="text-white font-semibold">Search unavailable</p>
+                        <p className="text-red-400 text-sm mt-1">{findError}</p>
                       </div>
-                    </div>
-                    {results.map((train, i) => (
-                      <TrainCard key={train.trainNo} train={train} index={i} />
-                    ))}
+                    ) : results.length > 0 ? (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm text-gray-400">
+                            <span className="text-white font-semibold">{results.length}</span> trains found
+                            {routeLabel.from && routeLabel.to && (
+                              <span className="text-gray-600"> · {routeLabel.from} → {routeLabel.to}</span>
+                            )}
+                          </p>
+                          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                            <Zap className="w-3 h-3 text-blue-400" />
+                            Live data
+                          </div>
+                        </div>
+                        {results.map((train, i) => (
+                          <TrainCard key={`${train.trainNo}-${i}`} train={train} index={i} compact />
+                        ))}
+                      </>
+                    ) : (
+                      <div className="glass-card p-5 text-center">
+                        <TrainIcon className="w-8 h-8 text-gray-500 mx-auto mb-3" />
+                        <p className="text-white font-semibold">No trains found</p>
+                        <p className="text-gray-500 text-sm mt-1">
+                          {findMessage || 'Try different station codes, e.g. SC → BZA'}
+                        </p>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -463,7 +596,7 @@ export default function SearchPage() {
                 <div className="text-center py-10">
                   <TrainIcon className="w-12 h-12 text-gray-700 mx-auto mb-3" />
                   <p className="text-gray-600 text-sm">Enter stations and tap Search</p>
-                  <p className="text-gray-700 text-xs mt-1">Try: Garla → Khammam</p>
+                  <p className="text-gray-700 text-xs mt-1">Try: Secunderabad (SC) → Vijayawada (BZA)</p>
                 </div>
               )}
             </motion.div>

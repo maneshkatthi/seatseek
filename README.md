@@ -86,4 +86,4 @@ seatseek/
 
 ---
 
-Built with ❤️ by the SeatSeek Team.
+Built with ❤️ by Team Orbit.

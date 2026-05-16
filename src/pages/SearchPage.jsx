@@ -182,7 +182,9 @@ function TrackTrainTab() {
     setApiError(null);
 
     try {
-      const apiKey = import.meta.env.VITE_RAPIDAPI_KEY || '6151738065msh51044cca57cc106p1e3817jsn790234601715';
+      const keysString = import.meta.env.VITE_RAPIDAPI_KEYS || '6151738065msh51044cca57cc106p1e3817jsn790234601715';
+      const keys = keysString.split(',').map(k => k.trim());
+      const apiKey = keys[Math.floor(Math.random() * keys.length)];
       const response = await fetch(`https://indian-railway-irctc.p.rapidapi.com/api/trains-search/v1/train/${trainNo.trim()}?isH5=true&client=web`, {
         headers: {
           'x-rapidapi-host': 'indian-railway-irctc.p.rapidapi.com',

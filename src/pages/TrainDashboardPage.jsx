@@ -50,7 +50,9 @@ export default function TrainDashboardPage() {
         const dd = String(targetDate.getDate()).padStart(2, '0');
         const dateStr = `${yyyy}${mm}${dd}`;
 
-        const apiKey = import.meta.env.VITE_RAPIDAPI_KEY || '6151738065msh51044cca57cc106p1e3817jsn790234601715';
+        const keysString = import.meta.env.VITE_RAPIDAPI_KEYS || '6151738065msh51044cca57cc106p1e3817jsn790234601715';
+        const keys = keysString.split(',').map(k => k.trim());
+        const apiKey = keys[Math.floor(Math.random() * keys.length)];
 
         const response = await fetch(`https://indian-railway-irctc.p.rapidapi.com/api/trains/v1/train/status?departure_date=${dateStr}&isH5=true&client=web&deviceIdentifier=seatseek&train_number=${trainNo}`, {
           method: 'GET',

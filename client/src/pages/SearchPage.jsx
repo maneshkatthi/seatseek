@@ -7,6 +7,7 @@ import {
   BarChart2, RadioTower
 } from 'lucide-react';
 import { STATIONS, TRAINS } from '../data/mockData';
+import { searchTrain } from '../services/api';
 
 // --- Station Autocomplete Input ---
 function StationInput({ label, value, onChange, placeholder, icon: Icon }) {
@@ -182,16 +183,7 @@ function TrackTrainTab() {
     setApiError(null);
 
     try {
-      const keysString = import.meta.env.VITE_RAPIDAPI_KEYS || '6151738065msh51044cca57cc106p1e3817jsn790234601715';
-      const keys = keysString.split(',').map(k => k.trim());
-      const apiKey = keys[Math.floor(Math.random() * keys.length)];
-      const response = await fetch(`https://indian-railway-irctc.p.rapidapi.com/api/trains-search/v1/train/${trainNo.trim()}?isH5=true&client=web`, {
-        headers: {
-          'x-rapidapi-host': 'indian-railway-irctc.p.rapidapi.com',
-          'x-rapidapi-key': apiKey
-        }
-      });
-      const data = await response.json();
+      const data = await searchTrain(trainNo.trim());
       
       if (data.body && data.body.length > 0 && data.body[0].trains.length > 0) {
         const t = data.body[0].trains[0];

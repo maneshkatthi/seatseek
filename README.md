@@ -1,67 +1,64 @@
-# 🚆 SeatSeek
+# 🚆 SeatSeek Full-Stack
 
-**Futuristic Railway Crowd Intelligence Dashboard**
+SeatSeek has been refactored into a scalable full-stack architecture. The project is divided into a React frontend and an Express backend.
 
-SeatSeek is a high-fidelity, cyberpunk-inspired web application designed to solve a common commuter problem: finding the least crowded train coach before boarding. Built with a sleek "Tesla-meets-Linear" dark mode aesthetic, SeatSeek provides passengers with real-time crowd density visualization, smart boarding recommendations, and live train tracking.
+## 📂 Project Structure
 
-**Powered by ReView AI Tech and Solutions | Team Orbit**
-
----
-
-## 🌟 Key Features
-
-*   **Live Train Tracking:** Monitor the live location, delay times, and route progression of your train via an interactive vertical timeline.
-*   **Coach Density Visualization:** A horizontal, scrollable, glowing train visualizer that displays real-time capacity levels for each coach using color-coded indicators (Green = Low, Red = High).
-*   **Smart Boarding Recommendations:** The system automatically flags coaches that are under 40% capacity, guiding passengers to the most comfortable seating.
-*   **Premium Cyberpunk Aesthetic:** Built with a deep navy palette (`#0a0e1a`), neon blue accents, glassmorphism cards (backdrop blurs), and fluid micro-animations.
-*   **Responsive Design:** Fully optimized for both desktop browsers and mobile devices.
-
-## 🛠️ Technology Stack
-
-*   **Frontend Framework:** React 18
-*   **Build Tool:** Vite
-*   **Styling:** Tailwind CSS (Custom utility classes and grid patterns)
-*   **Animations:** Framer Motion (Page transitions, hover effects, interactive visualizations)
-*   **Routing:** React Router v6 (`react-router-dom`)
-*   **Icons:** Lucide React
+```
+seatseek/
+├── client/   # React + Vite frontend
+└── server/   # Node.js + Express backend
+```
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-Make sure you have [Node.js](https://nodejs.org/) (v18 or higher) installed on your machine.
+- [Node.js](https://nodejs.org/) (v18 or higher)
 
 ### Installation
 
-1. **Clone the repository:**
+1. **Clone and enter the directory:**
    ```bash
    git clone https://github.com/maneshkatthi/seatseek.git
    cd seatseek
    ```
 
-2. **Install dependencies:**
+2. **Install all dependencies:**
    ```bash
-   npm install
+   npm run install-all
    ```
 
-3. **Start the development server:**
-   ```bash
-   npm run dev
+### Configuration
+
+1. **Backend Setup:**
+   Create a `server/.env` file and add your RapidAPI keys:
+   ```env
+   PORT=5000
+   RAPIDAPI_KEYS=key1,key2,key3
+   RAPIDAPI_HOST=indian-railway-irctc.p.rapidapi.com
    ```
 
-4. **Open in Browser:**
-   Navigate to `http://localhost:5173` (or the port provided in your terminal).
+2. **Frontend Setup:**
+   Create a `client/.env` file:
+   ```env
+   VITE_API_URL=http://localhost:5000/api
+   ```
 
-## 📂 Project Structure
+### Running the App
 
-*   `/src/pages` - Contains the main routing views (`HomePage`, `SearchPage`, `TrainDashboardPage`, `AboutPage`).
-*   `/src/components` - Reusable UI components (`Navbar`, `Footer`).
-*   `/src/data` - Contains `mockData.js`, simulating real-time IoT sensor data from onboard ESP32 units.
-*   `/public` - Static assets including the custom `seatseek-logo.png` and `review-logo.png`.
+Run both frontend and backend simultaneously:
+```bash
+npm run dev
+```
 
-## 🔮 Future Enhancements (Roadmap)
-*   **Real-time Backend Integration:** Replace mock data with live WebSocket streams from physical ESP32 IoT sensors via Supabase.
-*   **User Authentication:** Allow users to save their favorite routes and set crowd-density alarms.
-*   **Push Notifications:** Send alerts to users when their train is arriving or when coach density rapidly changes.
+- **Frontend:** http://localhost:5173
+- **Backend:** http://localhost:5000
 
-## 👥 Credits
-Developed by **Team Orbit** under the guidance of **ReView AI Tech and Solutions**.
+## 🛠️ Tech Stack
+- **Frontend:** React, Vite, Tailwind CSS, Framer Motion, Axios.
+- **Backend:** Node.js, Express, Axios, Dotenv, CORS, Morgan.
+
+## 🔮 Roadmap
+- ESP32 IoT Sensor integration.
+- Supabase/Firebase for user profiles.
+- GPS live tracking modules.

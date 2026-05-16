@@ -8,6 +8,7 @@ import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
 
+
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' } },
@@ -40,7 +41,7 @@ function AnimatedRoutes() {
   );
 }
 
-function Layout() {
+function MainLayout() {
   const location = useLocation();
   const hideFooter = location.pathname.startsWith('/train');
 
@@ -58,7 +59,10 @@ function Layout() {
 export default function App() {
   return (
     <BrowserRouter>
-      <Layout />
+      <Routes>
+
+        <Route path="*" element={<MainLayout />} />
+      </Routes>
     </BrowserRouter>
   );
 }

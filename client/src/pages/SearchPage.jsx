@@ -237,7 +237,7 @@ function TrackTrainTab() {
         <label className="block text-xs text-gray-500 font-medium mb-2 uppercase tracking-wide">
           Train Number
         </label>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1 flex items-center gap-3 glass-card px-4 py-3">
             <TrainIcon className="w-4 h-4 text-blue-400" />
             <input
@@ -254,7 +254,7 @@ function TrackTrainTab() {
             whileTap={{ scale: 0.97 }}
             onClick={handleSearch}
             disabled={loading}
-            className={`flex items-center gap-2 bg-blue-500 text-white text-sm font-semibold px-5 rounded-xl transition-all ${loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-400'}`}
+            className={`flex items-center justify-center gap-2 bg-blue-500 text-white text-sm font-semibold py-3 sm:px-5 rounded-xl transition-all ${loading ? 'opacity-70 cursor-not-allowed' : 'hover:bg-blue-400'}`}
           >
             {loading ? (
                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -395,7 +395,7 @@ export default function SearchPage() {
             >
               {/* Search form */}
               <div className="glass-card p-6 space-y-4">
-                <div className="flex gap-3 items-end">
+                <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
                   <StationInput
                     label="From"
                     value={from}
@@ -410,10 +410,9 @@ export default function SearchPage() {
                     whileTap={{ scale: 0.9 }}
                     onClick={handleSwap}
                     transition={{ duration: 0.3 }}
-                    className="flex-shrink-0 w-11 h-11 glass-card-hover flex items-center justify-center mb-0 self-end"
-                    style={{ marginBottom: '0px' }}
+                    className="flex-shrink-0 w-11 h-11 glass-card-hover flex items-center justify-center sm:self-end self-center my-1 sm:my-0 sm:mb-[0px]"
                   >
-                    <ArrowLeftRight className="w-4 h-4 text-blue-400" />
+                    <ArrowLeftRight className="w-4 h-4 text-blue-400 transform rotate-90 sm:rotate-0" />
                   </motion.button>
 
                   <StationInput

@@ -203,9 +203,9 @@ export default function TrainDashboardPage() {
                  <span className="text-right">Departure</span>
               </div>
 
-              <div className="relative p-8">
+              <div className="relative p-4 md:p-8">
                  {/* Vertical Progress Rail */}
-                 <div className="absolute left-1/2 top-8 bottom-8 w-[2px] bg-white/5 -translate-x-1/2 overflow-hidden">
+                 <div className="absolute left-1/2 top-4 md:top-8 bottom-4 md:bottom-8 w-[2px] bg-white/5 -translate-x-1/2 overflow-hidden">
                     {/* Energy Flow Animation */}
                     <motion.div 
                       animate={{ y: ["0%", "100%"] }}
@@ -222,17 +222,17 @@ export default function TrainDashboardPage() {
                        const isPast = !isCurrent && i < (liveData.stations || routeData).findIndex(s => liveData.currentStation?.includes(s.stationCode));
 
                        return (
-                          <div key={i} className={`relative flex items-center justify-between group py-2 px-2 transition-all duration-500 ${isCurrent ? 'border-l-2 border-blue-500 pl-3 bg-blue-500/[0.04]' : 'border-l-2 border-transparent'} ${isPast ? 'opacity-40' : ''}`}>
+                          <div key={i} className={`relative flex items-center justify-between group py-2 px-1 md:px-2 transition-all duration-500 ${isCurrent ? 'border-l-2 border-blue-500 pl-2 md:pl-3 bg-blue-500/[0.04]' : 'border-l-2 border-transparent'} ${isPast ? 'opacity-40' : ''}`}>
                              {/* Left: Arr Time */}
-                             <div className="w-[40%] text-right pr-8">
-                                <div className={`text-sm font-bold transition-colors ${isCurrent ? 'text-blue-400' : 'text-gray-400'}`}>{station.arrivalTime || '--:--'}</div>
+                             <div className="w-[42%] md:w-[40%] text-right pr-3 md:pr-8">
+                                <div className={`text-xs md:text-sm font-bold transition-colors ${isCurrent ? 'text-blue-400' : 'text-gray-400'}`}>{station.arrivalTime || '--:--'}</div>
                                 {Number(liveData.delay) > 0 && isPast && (
                                    <div className="text-[9px] font-bold text-red-500 italic mt-0.5">{addMinutes(station.arrivalTime, liveData.delay)}</div>
                                 )}
                              </div>
 
                              {/* Middle: Active Train / Node */}
-                             <div className="relative z-10 flex items-center justify-center w-8 h-8">
+                             <div className="relative z-10 flex items-center justify-center w-6 md:w-8 h-6 md:h-8">
                                 {isCurrent ? (
                                    <motion.div 
                                      animate={{ y: [-3, 3, -3] }}
@@ -240,32 +240,32 @@ export default function TrainDashboardPage() {
                                      className="relative flex items-center justify-center"
                                    >
                                       {/* Pulse Effect */}
-                                      <div className="absolute inset-0 w-10 h-10 bg-blue-500/20 rounded-full blur-md animate-pulse" />
+                                      <div className="absolute inset-0 w-8 md:w-10 h-8 md:h-10 bg-blue-500/20 rounded-full blur-md animate-pulse" />
                                       {/* Glowing Rail Path behind train */}
                                       <div className="absolute w-[2px] h-12 bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.8)]" />
                                       {/* Futuristic Train Icon */}
-                                      <div className="relative z-20 p-1.5 bg-[#0a0c10] border border-blue-500/50 rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.5)]">
-                                         <TrainFront className="w-4 h-4 text-blue-400" />
+                                      <div className="relative z-20 p-1 md:p-1.5 bg-[#0a0c10] border border-blue-500/50 rounded-lg shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                                         <TrainFront className="w-3 md:w-4 h-3 md:h-4 text-blue-400" />
                                       </div>
                                    </motion.div>
                                 ) : (
-                                   <div className={`w-2.5 h-2.5 rounded-full border-2 border-[#0a0c10] transition-all duration-500 ${isPast ? 'bg-blue-500/60' : 'bg-gray-800'}`} />
+                                   <div className={`w-2 md:w-2.5 h-2 md:h-2.5 rounded-full border-2 border-[#0a0c10] transition-all duration-500 ${isPast ? 'bg-blue-500/60' : 'bg-gray-800'}`} />
                                 )}
                              </div>
 
                              {/* Right: Stn Info + Dep Time */}
-                             <div className="w-[40%] pl-8 flex items-start justify-between">
-                                <div className={`transition-all duration-500 ${isCurrent ? 'scale-105 translate-x-1' : ''}`}>
-                                   <h4 className={`text-sm font-black leading-tight tracking-tight transition-colors ${isCurrent ? 'text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]' : 'text-white'}`}>
+                             <div className="w-[42%] md:w-[40%] pl-3 md:pl-8 flex flex-col md:flex-row items-start md:justify-between">
+                                <div className={`transition-all duration-500 mb-0.5 md:mb-0 w-[60%] md:w-auto ${isCurrent ? 'md:scale-105 md:translate-x-1' : ''}`}>
+                                   <h4 className={`text-[11px] md:text-sm font-black leading-tight tracking-tight transition-colors line-clamp-1 md:line-clamp-none ${isCurrent ? 'text-blue-400 drop-shadow-[0_0_8px_rgba(59,130,246,0.3)]' : 'text-white'}`} title={station.stationName}>
                                       {station.stationName}
                                    </h4>
-                                   <div className="flex items-center gap-2 mt-1">
-                                      <span className="text-[9px] text-gray-500 font-bold">{station.distance} KM</span>
-                                      <span className={`px-1.5 py-0.5 rounded text-[8px] font-black border transition-colors ${isCurrent ? 'bg-blue-600/20 border-blue-500/30 text-blue-300' : 'bg-white/5 border-white/10 text-gray-400'}`}>PF {station.platform || '1'}</span>
+                                   <div className="flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1">
+                                      <span className="text-[8px] md:text-[9px] text-gray-500 font-bold">{station.distance} KM</span>
+                                      <span className={`px-1 md:px-1.5 py-0.5 rounded text-[7px] md:text-[8px] font-black border transition-colors ${isCurrent ? 'bg-blue-600/20 border-blue-500/30 text-blue-300' : 'bg-white/5 border-white/10 text-gray-400'}`}>PF {station.platform || '1'}</span>
                                    </div>
                                 </div>
-                                <div className="text-right">
-                                   <div className={`text-sm font-bold transition-colors ${isCurrent ? 'text-blue-400' : 'text-gray-400'}`}>{station.departureTime || '--:--'}</div>
+                                <div className="text-left md:text-right">
+                                   <div className={`text-[11px] md:text-sm font-bold transition-colors ${isCurrent ? 'text-blue-400' : 'text-gray-400'}`}>{station.departureTime || '--:--'}</div>
                                    {Number(liveData.delay) > 0 && isPast && (
                                       <div className="text-[9px] font-bold text-red-500 italic mt-0.5">{addMinutes(station.departureTime, liveData.delay)}</div>
                                    )}

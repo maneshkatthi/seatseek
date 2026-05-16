@@ -7,6 +7,7 @@ import TrainDashboardPage from './pages/TrainDashboardPage';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import SearchPage from './pages/SearchPage';
+import { ThemeProvider } from './context/ThemeContext';
 
 
 const pageVariants = {
@@ -46,7 +47,7 @@ function MainLayout() {
   const hideFooter = location.pathname.startsWith('/train');
 
   return (
-    <div className="min-h-screen bg-[#0a0e1a] text-white">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] transition-colors duration-300">
       <Navbar />
       <main>
         <AnimatedRoutes />
@@ -58,11 +59,12 @@ function MainLayout() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-
-        <Route path="*" element={<MainLayout />} />
-      </Routes>
-    </BrowserRouter>
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="*" element={<MainLayout />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }

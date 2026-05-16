@@ -64,15 +64,15 @@ function StationInput({ label, value, onChange, onSelectStation, placeholder, ic
   return (
     <div ref={wrapRef} className="relative flex-1">
       <label className="block text-xs text-gray-500 font-medium mb-1.5 uppercase tracking-wide">{label}</label>
-      <div className={`flex items-center gap-3 glass-card px-4 py-3 transition-all duration-200 ${focused ? 'border-blue-500/60 shadow-lg shadow-blue-500/10' : ''}`}>
-        <Icon className="w-4 h-4 text-blue-400 flex-shrink-0" />
+      <div className={`flex items-center gap-3 glass-card px-4 py-4 transition-all duration-300 ${focused ? 'border-blue-500 ring-4 ring-blue-500/10 shadow-xl' : ''}`}>
+        <Icon className={`w-5 h-5 transition-colors duration-300 ${focused ? 'text-blue-500' : 'text-[var(--text-muted)]'}`} />
         <input
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => setFocused(true)}
           placeholder={placeholder}
-          className="flex-1 bg-transparent text-white placeholder-gray-600 text-sm focus:outline-none"
+          className="flex-1 bg-transparent text-[var(--text-primary)] placeholder-[var(--text-muted)] text-sm font-medium focus:outline-none"
         />
       </div>
       <AnimatePresence>
@@ -128,26 +128,29 @@ function TrainCard({ train, index, compact = false }) {
 
         {/* Info */}
         <div className="flex-1">
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            <span className="text-white font-bold text-base">{train.name}</span>
-            <span className="text-xs text-gray-500 font-mono bg-white/5 px-2 py-0.5 rounded-md">#{train.trainNo}</span>
-            <span className="text-xs bg-blue-500/15 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full">{train.type}</span>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <span className="text-[var(--text-primary)] font-bold text-lg">{train.name}</span>
+            <span className="text-[var(--text-muted)] text-xs font-mono bg-[var(--bg-secondary)] px-2 py-1 rounded-lg border border-[var(--border-primary)]">#{train.trainNo}</span>
+            <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">{train.type}</span>
           </div>
 
           {/* Timing row */}
-          <div className="flex items-center gap-3 mt-2 flex-wrap">
-            <div className="text-center">
-              <p className="text-white font-bold text-lg">{train.departure}</p>
-              <p className="text-xs text-gray-500">{train.fromName}</p>
+          <div className="flex items-center gap-4 mt-4 flex-wrap">
+            <div className="text-left">
+              <p className="text-[var(--text-primary)] font-black text-2xl">{train.departure}</p>
+              <p className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-tight">{train.fromName}</p>
             </div>
-            <div className="flex-1 flex items-center gap-2 min-w-[80px]">
-              <div className="h-px flex-1 bg-white/10" />
-              <span className="text-xs text-gray-600 whitespace-nowrap">{train.duration}</span>
-              <div className="h-px flex-1 bg-white/10" />
+            <div className="flex-1 flex items-center gap-2 min-w-[100px]">
+              <div className="h-px flex-1 bg-[var(--border-primary)]" />
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] text-[var(--text-muted)] font-bold uppercase mb-1">Travel Time</span>
+                <span className="text-xs text-blue-400 font-bold px-2 py-1 bg-blue-500/5 rounded-md whitespace-nowrap border border-blue-500/10">{train.duration}</span>
+              </div>
+              <div className="h-px flex-1 bg-[var(--border-primary)]" />
             </div>
-            <div className="text-center">
-              <p className="text-white font-bold text-lg">{train.arrival}</p>
-              <p className="text-xs text-gray-500">{train.toName}</p>
+            <div className="text-right">
+              <p className="text-[var(--text-primary)] font-black text-2xl">{train.arrival}</p>
+              <p className="text-xs text-[var(--text-muted)] font-medium uppercase tracking-tight">{train.toName}</p>
             </div>
           </div>
 
@@ -445,7 +448,7 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0e1a]">
+    <div className="min-h-screen bg-[var(--bg-primary)] transition-colors duration-300">
       <div className="fixed inset-0 animated-grid pointer-events-none opacity-50" />
 
       <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 pt-24 pb-16">
@@ -455,8 +458,8 @@ export default function SearchPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold text-white mb-2">Train Search</h1>
-          <p className="text-gray-500 text-sm">Find trains, check live crowd density, and track status in real time.</p>
+          <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-2">Train Search</h1>
+          <p className="text-[var(--text-secondary)] text-sm">Find trains, check live crowd density, and track status in real time.</p>
         </motion.div>
 
         {/* Tab switcher */}
@@ -594,9 +597,9 @@ export default function SearchPage() {
 
               {!searched && (
                 <div className="text-center py-10">
-                  <TrainIcon className="w-12 h-12 text-gray-700 mx-auto mb-3" />
-                  <p className="text-gray-600 text-sm">Enter stations and tap Search</p>
-                  <p className="text-gray-700 text-xs mt-1">Try: Secunderabad (SC) → Vijayawada (BZA)</p>
+                  <TrainIcon className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-3" />
+                  <p className="text-[var(--text-secondary)] text-sm">Enter stations and tap Search</p>
+                  <p className="text-[var(--text-muted)] text-xs mt-1">Try: Secunderabad (SC) → Vijayawada (BZA)</p>
                 </div>
               )}
             </motion.div>

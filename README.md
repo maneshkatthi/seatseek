@@ -2,7 +2,7 @@
 
 SeatSeek is a production-ready train intelligence platform that provides real-time train running status, route tracking, and coach-wise crowd density visualization. Designed for scalability, it leverages IoT sensor data and AI-based predictions to help passengers board smarter.
 
-![SeatSeek Dashboard](https://kommodo.ai/i/KPzfYPsKFWQrGN3twYyeauto=format&fit=crop&q=80&w=1200)
+![SeatSeek Dashboard](https://kommodo.ai/i/KPzfYPsKFWQrGN3twYye)
 
 ## 🌟 Key Features
 

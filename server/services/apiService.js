@@ -1,9 +1,13 @@
 const axios = require('axios');
 
-const keys = process.env.RAPIDAPI_KEYS.split(',');
-const host = process.env.RAPIDAPI_HOST;
+const getApiKey = () => {
+  const keysString = process.env.RAPIDAPI_KEYS || '';
+  const keys = keysString.split(',').filter(k => k.trim());
+  if (keys.length === 0) return null;
+  return keys[Math.floor(Math.random() * keys.length)];
+};
 
-const getApiKey = () => keys[Math.floor(Math.random() * keys.length)];
+const host = process.env.RAPIDAPI_HOST;
 
 const fetchFromRapidAPI = async (endpoint, params) => {
   const apiKey = getApiKey();
